@@ -1,15 +1,12 @@
 'use strict';
 
 var fs = require('fs');
+var path = require("path");
+var csv = require('csv-parser');
 var express = require('express');
 var ArgumentParser = require('argparse').ArgumentParser;
 
-/**
- * Surviving Offline Server
- *
- * Simple static files server using node and Express.
- */
-class SurvivingOfflineServer {
+class INGCSVUtilServer {
   /**
    * Creates an argument parser with:
    * - Description
@@ -22,47 +19,87 @@ class SurvivingOfflineServer {
       {
         version: '0.0.1',
         addHelp: true,
-        description: 'Surviving to the offline status NodeJS server.'
+        description: 'Dutch ING CSV Utils NodeJS server.'
       }
     );
     // Define the port argument
-    this.argParser.addArgument(['-p', '--port'],{
+    this.argParser.addArgument(['-p', '--port'], {
       help: 'Port on where to run the server.',
       type: 'int',
-      defaultValue: '8888'
+      defaultValue: '8181'
     });
     // Get the arguments
     this.arguments = this.argParser.parseArgs();
   }
 
   /**
-   * Crates the Express app and sets up the middleware to:
+   * Creates the Express app and sets up the middleware to:
    * - Log the requests in the terminal.
    * - Serve the static files located in "../app"
    */
-  createApp(){
+  createApp() {
     // Create a new express app
     this.app = express();
     // Log the requests
     this.app.use(function logger(req, res, next) {
-      console.log('serving '+req.url);
+      console.log('serving ' + req.url);
       next(); // Passing the request to the next handler in the stack.
     });
     // Configure the static files
-    this.app.use(express.static('/app'));
+    this.app.use(express.static('app'));
+    // registering rest API
+    this.app.get('/getData', this.restGetData);
   }
 
   /**
    * Starts a http server in the port specified in the arguments or 8888
    */
-  startServing(){
+  startServing() {
     let serverPort = this.arguments.port;
     // Listen on the current port
-    this.app.listen(serverPort, function(){
+    this.app.listen(serverPort, function () {
       console.log('Server listening on port: ', serverPort);
     })
   }
-  
+
+  restGetData(request, response) {
+    var folder = "data";
+    var jsonArr = [];
+
+    fs.readdir(folder, function (err, files) {
+      if (err) {
+        throw err;
+      }
+
+      files.map(function (file) {
+        return path.join(folder, file);
+      }).filter(function (file) {
+        return fs.statSync(file).isFile();
+      }).forEach(function (file) {
+        fs.createReadStream(file)
+          .pipe(csv())
+          .on('data', function (rowData) {
+            // Process row
+            let processedDate = rowData.Datum.substring(0, 4) + '/' + rowData.Datum.substring(4, 6) + '/' + rowData.Datum.substring(6);
+            let processedAmount = parseFloat(rowData["Bedrag (EUR)"].replace(',', '.'));
+            let relevantData = {
+              date: processedDate,
+              isWithdrawal: rowData['Af Bij'] == 'Af',
+              amount: processedAmount,
+              mutation: rowData.Mededelingen,
+              description: rowData['Naam / Omschrijving'],
+              communication: rowData.Mededelingen
+            };
+            jsonArr.push(relevantData);
+          })
+          .on('end', function () {
+            response.json(jsonArr);
+            response.end();
+          })
+      });
+    });
+  }
+
   constructor() {
     this.initArgumentParser();
     this.createApp();
@@ -70,4 +107,4 @@ class SurvivingOfflineServer {
   }
 }
 
-var server = new SurvivingOfflineServer();
+var server = new INGCSVUtilServer();
