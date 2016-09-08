@@ -1,0 +1,20 @@
+{
+  "name": "node_server",
+  "description": "NodeJS Server",
+  "main": "server.js",
+  "authors": [
+    "Rafael Teixeira Fernandes"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/AdamModus/ing-dutch-csv-utils",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "chartist": "^0.9.8"
+  }
+}
