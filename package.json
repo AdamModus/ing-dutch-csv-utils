@@ -1,23 +1,24 @@
 {
-  "name": "node_server",
-  "version": "1.0.0",
-  "description": "NodeJS Server",
-  "main": "server.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/AdamModus/ing-dutch-csv-utils"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Antoni Huguet Vives",
-  "license": "ISC",
-  "dependencies": {
-    "argparse": "^1.0.7",
-    "csv-parser": "^1.11.0",
-    "express": "^4.14.0"
-  },
-  "devDependencies": {
-    "bower": "^1.7.9"
-  }
+    "name": "node_server",
+    "version": "1.0.0",
+    "description": "NodeJS Server",
+    "main": "server.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/AdamModus/ing-dutch-csv-utils"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "cd server && node server.js"
+    },
+    "author": "Antoni Huguet Vives",
+    "license": "ISC",
+    "dependencies": {
+        "argparse": "^1.0.7",
+        "csv-parser": "^1.11.0",
+        "express": "^4.14.0"
+    },
+    "devDependencies": {
+        "bower": "^1.7.9"
+    }
 }

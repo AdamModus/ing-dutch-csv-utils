@@ -5,6 +5,7 @@ var path = require("path");
 var csv = require('csv-parser');
 var express = require('express');
 var ArgumentParser = require('argparse').ArgumentParser;
+var csvHandler = require('./csv-handler');
 
 class INGCSVUtilServer {
   /**
@@ -46,7 +47,7 @@ class INGCSVUtilServer {
       next(); // Passing the request to the next handler in the stack.
     });
     // Configure the static files
-    this.app.use(express.static('app'));
+    this.app.use(express.static('../app'));
     // registering rest API
     this.app.get('/getData', this.restGetData);
   }
@@ -63,39 +64,37 @@ class INGCSVUtilServer {
   }
 
   restGetData(request, response) {
-    var folder = "data";
+    var folder = "../data";
     var jsonArr = [];
+    var fileCounter = 0;
 
     fs.readdir(folder, function (err, files) {
       if (err) {
         throw err;
       }
 
-      files.map(function (file) {
+      var filteredFiles = files.map(function (file) {
         return path.join(folder, file);
       }).filter(function (file) {
-        return fs.statSync(file).isFile();
-      }).forEach(function (file) {
+        return fs.statSync(file).isFile() && file.endsWith('.csv');
+      })
+
+      filteredFiles.forEach(function (file) {
         fs.createReadStream(file)
           .pipe(csv())
           .on('data', function (rowData) {
             // Process row
-            let processedDate = rowData.Datum.substring(0, 4) + '/' + rowData.Datum.substring(4, 6) + '/' + rowData.Datum.substring(6);
-            let processedAmount = parseFloat(rowData["Bedrag (EUR)"].replace(',', '.'));
-            let relevantData = {
-              date: processedDate,
-              isWithdrawal: rowData['Af Bij'] == 'Af',
-              amount: processedAmount,
-              mutation: rowData.Mededelingen,
-              description: rowData['Naam / Omschrijving'],
-              communication: rowData.Mededelingen
-            };
-            jsonArr.push(relevantData);
+            let processedRow = csvHandler.handleRow(rowData);
+            jsonArr.push(processedRow);
           })
           .on('end', function () {
-            response.json(jsonArr);
-            response.end();
-          })
+            fileCounter++;
+            if (fileCounter >= filteredFiles.length) {
+              let processedData = csvHandler.handleData(jsonArr);
+              response.json(processedData);
+              response.end();
+            }
+          });
       });
     });
   }
