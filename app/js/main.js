@@ -64,7 +64,7 @@ function createCustomTooltip(transaction) {
             <div style="font-family: Verdana">
               <div>Date: <b>${transaction.date}</b></div>
               <div>Balance: <b>${transaction.balance}€</b></div>
-              <div>Transaction value: ${transaction.amount}</div>
+              <div>Transaction value: ${transaction.amount}€</div>
               <div>Description: ${transaction.description}</div>
             </div>
   `;
